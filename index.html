@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cambridge B1 PET — Colegio Boston Flexible 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0a1628; --navy2:#1a2d52; --gold:#c8a84b; --green:#1a5c2e;
+  --red:#8b1c1c; --cream:#faf8f3; --border:#d4c9a8; --text:#1a1a2e;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:Inter,sans-serif; background:#f2ede4; color:var(--text); }
+
+/* ── SPLASH ── */
+#splash {
+  position:fixed; inset:0; background:var(--navy);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:9999; padding:24px; transition:opacity 0.5s;
+}
+#splash img { width:90px; height:90px; border-radius:50%; border:3px solid var(--gold); margin-bottom:20px; object-fit:cover; }
+#splash h1 { font-family:"Playfair Display",serif; color:#fff; font-size:1.6rem; text-align:center; margin-bottom:6px; }
+#splash p  { color:rgba(255,255,255,0.5); font-size:0.82rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:32px; }
+#splash input {
+  width:100%; max-width:420px; padding:14px 18px;
+  background:rgba(255,255,255,0.08); border:2px solid rgba(200,168,75,0.5);
+  border-radius:10px; color:#fff; font-size:1rem; outline:none;
+  font-family:Inter,sans-serif;
+}
+#splash input:focus { border-color:var(--gold); }
+#splash input::placeholder { color:rgba(255,255,255,0.3); }
+#splash button {
+  margin-top:14px; width:100%; max-width:420px;
+  padding:14px; background:var(--gold); border:none; border-radius:10px;
+  color:var(--navy); font-size:1rem; font-weight:700; cursor:pointer;
+  font-family:Inter,sans-serif;
+}
+#splash button:hover { background:#d4b45a; }
+#splash-error { color:#ff6b6b; font-size:0.85rem; margin-top:10px; display:none; }
+#splash-suggestions {
+  width:100%; max-width:420px; background:#1a2d52; border:1px solid var(--gold);
+  border-radius:8px; overflow:hidden; display:none; margin-top:4px;
+}
+.sug-item { padding:11px 16px; color:#fff; cursor:pointer; font-size:0.9rem; border-bottom:1px solid rgba(255,255,255,0.1); }
+.sug-item:hover { background:rgba(200,168,75,0.2); }
+
+/* ── TIMER ── */
+#timer-bar {
+  display:none; position:sticky; top:0; z-index:100;
+  background:var(--navy); padding:10px 20px;
+  display:none; align-items:center; justify-content:space-between;
+}
+#timer-display { font-family:"Playfair Display",serif; font-size:1.4rem; color:var(--gold); font-weight:700; }
+#timer-display.warn { color:#ff6b6b; }
+.timer-label { color:rgba(255,255,255,0.5); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; }
+#student-info-bar { color:rgba(255,255,255,0.7); font-size:0.82rem; text-align:right; }
+#version-badge { background:var(--gold); color:var(--navy); font-weight:700; font-size:0.72rem; padding:3px 10px; border-radius:20px; margin-left:8px; }
+
+/* ── TABS ── */
+#exam-body { display:none; max-width:860px; margin:0 auto; padding:20px 16px 60px; }
+.tab-row { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.tab-btn {
+  padding:9px 18px; border-radius:8px; border:1.5px solid var(--border);
+  background:#fff; color:var(--text); font-size:0.85rem; font-weight:600;
+  cursor:pointer; transition:all 0.15s;
+}
+.tab-btn.active { background:var(--navy); color:var(--gold); border-color:var(--navy); }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* ── CARDS ── */
+.part-card { background:#fff; border-radius:12px; border:1px solid var(--border); padding:22px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+.part-title { font-family:"Playfair Display",serif; font-size:1.05rem; font-weight:700; color:var(--navy); margin-bottom:4px; }
+.part-sub { font-size:0.78rem; color:#888; margin-bottom:16px; }
+.instructions { background:#f0ead8; border-left:3px solid var(--gold); padding:10px 14px; border-radius:0 6px 6px 0; font-size:0.84rem; color:#555; margin-bottom:18px; line-height:1.6; }
+
+/* ── QUESTION BLOCKS ── */
+.qblock { border:1.5px solid var(--border); border-radius:8px; padding:16px; margin-bottom:14px; background:#fff; }
+.qblock.answered { border-color:#aed6b5; }
+.qnum { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#aaa; margin-bottom:8px; }
+.qtext { font-size:0.9rem; line-height:1.55; margin-bottom:12px; }
+.signbox { background:#f8f5ee; border:1px solid #ddd; border-radius:6px; padding:14px; margin-bottom:12px; font-family:monospace; font-size:0.85rem; line-height:1.7; white-space:pre-wrap; }
+.opts { display:grid; gap:7px; }
+.opt {
+  display:flex; align-items:flex-start; gap:10px; padding:10px 12px;
+  border:1.5px solid var(--border); border-radius:7px; cursor:pointer;
+  font-size:0.87rem; line-height:1.45; transition:all 0.12s; background:#fff;
+}
+.opt:hover { border-color:var(--gold); background:#fdf8ee; }
+.opt.selected { border-color:var(--gold); background:#fef8e3; font-weight:600; }
+.opt-letter {
+  min-width:24px; height:24px; border-radius:50%; background:var(--navy);
+  color:var(--gold); font-weight:700; font-size:0.78rem; display:flex;
+  align-items:center; justify-content:center; flex-shrink:0;
+}
+.text-inp {
+  width:220px; padding:9px 12px; border:2px solid var(--border);
+  border-radius:7px; font-size:0.92rem; outline:none; font-family:Inter,sans-serif;
+}
+.text-inp:focus { border-color:var(--navy); }
+.writing-area {
+  width:100%; min-height:150px; padding:12px; border:1.5px solid var(--border);
+  border-radius:8px; font-size:0.9rem; font-family:Inter,sans-serif;
+  line-height:1.7; resize:vertical; outline:none;
+}
+.writing-area:focus { border-color:var(--navy); }
+.wc { text-align:right; font-size:0.75rem; color:#aaa; margin-top:4px; }
+
+/* ── ACTIVITIES / SENTENCES BOX ── */
+.ref-box { background:#f0ead8; border:1px solid var(--gold); border-radius:8px; padding:16px 18px; margin-bottom:18px; }
+.ref-box-title { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--navy); margin-bottom:10px; }
+.ref-item { font-size:0.85rem; margin-bottom:7px; line-height:1.55; }
+
+/* ── PROGRESS ── */
+.progress-wrap { margin-bottom:20px; }
+.progress-bar { height:6px; background:#e5dfc8; border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--gold); border-radius:3px; transition:width 0.3s; width:0%; }
+.progress-label { font-size:0.75rem; color:#888; margin-top:5px; }
+
+/* ── SUBMIT ── */
+#submit-section { display:none; padding:24px 0 0; text-align:center; }
+#submit-btn {
+  padding:16px 48px; background:var(--navy); color:var(--gold);
+  border:none; border-radius:10px; font-size:1rem; font-weight:700;
+  cursor:pointer; font-family:Inter,sans-serif; transition:background 0.15s;
+}
+#submit-btn:hover { background:#0d1f3a; }
+
+/* ── MODAL ── */
+#modal-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7);
+  z-index:9000; align-items:center; justify-content:center; padding:16px;
+}
+#modal-overlay.show { display:flex; }
+#modal {
+  background:#fff; border-radius:14px; padding:32px; max-width:560px; width:100%;
+  max-height:90vh; overflow-y:auto;
+}
+#modal h2 { font-family:"Playfair Display",serif; color:var(--navy); margin-bottom:18px; }
+.score-big { font-size:3rem; font-weight:900; color:var(--navy); font-family:"Playfair Display",serif; }
+.score-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:18px 0; }
+.score-item { background:var(--cream); border:1px solid var(--border); border-radius:8px; padding:12px; }
+.score-item .si-label { font-size:0.75rem; color:#888; }
+.score-item .si-val   { font-size:1.1rem; font-weight:700; color:var(--navy); }
+.timing-item { background:#fef9e7; border:1px solid #f6d860; }
+#download-btn {
+  width:100%; padding:14px; background:var(--gold); border:none; border-radius:8px;
+  font-size:0.95rem; font-weight:700; color:var(--navy); cursor:pointer;
+  font-family:Inter,sans-serif; margin-top:16px;
+}
+#pdf-status { font-size:0.82rem; color:var(--green); margin-top:8px; text-align:center; }
+
+/* ── LISTENING ── */
+.listening-notice { background:#e8f4fd; border:1px solid #90c8f0; border-radius:8px; padding:16px; font-size:0.88rem; color:#1a4a7a; }
+.lq-item { margin-bottom:16px; }
+.lq-label { font-size:0.85rem; font-weight:600; margin-bottom:8px; }
+
+@media(max-width:600px) {
+  .score-grid { grid-template-columns:1fr; }
+  .opts { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     SPLASH SCREEN
+══════════════════════════════════════════════ -->
+<div id="splash">
+  <img src="data:image/png;base64,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" alt="Boston Flex">
+  <h1>Cambridge B1 Preliminary</h1>
+  <p>Colegio Boston Flexible &mdash; 2026</p>
+
+  <input id="splash-input" type="text" placeholder="Type your full name..."
+         oninput="onNameInput()" onkeydown="if(event.key==='Enter') doStart()">
+  <div id="splash-suggestions"></div>
+  <div id="splash-error"></div>
+  <button onclick="doStart()">Begin Exam &#9654;</button>
+  <p style="color:rgba(255,255,255,0.25);font-size:0.72rem;margin-top:24px;max-width:380px;text-align:center;">
+    "Be bold, be strong for the Lord your God is with you." — Joshua 1:9
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TIMER BAR
+══════════════════════════════════════════════ -->
+<div id="timer-bar" style="display:none;background:var(--navy);padding:10px 20px;display:none;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;">
+  <div>
+    <div class="timer-label">Time Remaining</div>
+    <div id="timer-display">45:00</div>
+  </div>
+  <div id="student-info-bar">
+    <span id="student-name-bar"></span>
+    <span id="version-badge">Version A</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     EXAM BODY
+══════════════════════════════════════════════ -->
+<div id="exam-body">
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+    <div class="progress-label" id="prog-label">0 / 32 reading questions answered</div>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="showTab('reading',this)">&#128218; Reading</button>
+    <button class="tab-btn" onclick="showTab('listening',this)">&#127911; Listening</button>
+    <button class="tab-btn" onclick="showTab('writing',this)">&#9997; Writing</button>
+  </div>
+
+  <!-- READING TAB -->
+  <div id="tab-reading" class="tab-panel active">
+    <div id="reading-content"></div>
+  </div>
+
+  <!-- LISTENING TAB -->
+  <div id="tab-listening" class="tab-panel">
+    <div class="part-card">
+      <div class="part-title">Listening Section</div>
+      <div class="part-sub">Questions L1–L25 — Answer as you listen</div>
+      <div class="listening-notice">
+        &#127911; <strong>Your teacher will play the audio.</strong> Listen carefully and choose or write your answer below. Each recording is played twice.
+      </div>
+      <div id="listening-content" style="margin-top:18px;"></div>
+    </div>
+  </div>
+
+  <!-- WRITING TAB -->
+  <div id="tab-writing" class="tab-panel">
+    <div id="writing-content"></div>
+  </div>
+
+  <div id="submit-section">
+    <button id="submit-btn" onclick="doSubmit()">Finish &amp; Generate Report &#10003;</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     RESULTS MODAL
+══════════════════════════════════════════════ -->
+<div id="modal-overlay">
+  <div id="modal">
+    <h2>&#127775; Exam Complete</h2>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONFIGURATION
+// ═══════════════════════════════════════════════════
+var TG_TOKEN   = "8795709814:AAHy2b-MdcLDbP-0GybEZWPqSlHAe67klac";
+var TG_CHAT    = "2041749428";
+var EXAM_HOUR  = 7;
+var EXAM_MIN   = 0;
+var LATE_MINS  = 10;
+var TIMER_SECS = 45 * 60;
+
+// ═══════════════════════════════════════════════════
+// STUDENT ROSTER
+// ═══════════════════════════════════════════════════
+var STUDENTS = [
+  "ALARCON OROZCO SEBASTIAN",
+  "ARBELAEZ LAMADRID VICTORIA",
+  "BARROS LOPEZ SOPHIA",
+  "CARDENAS BALLESTEROS SOFIA",
+  "CARRILLO SUAREZ LUCIANA",
+  "DIAZ GUZMAN ANDRES FELIPE",
+  "GARCIA SERRANO JUAN ESTEBAN",
+  "IBAÑEZ GUERRA MATIAS ANGEL",
+  "INSIGNARES HINCAPIE MATIAS",
+  "JIMENEZ CERVANTES MIGUEL ANDRES",
+  "MALAVER FLORIAN ELIZABETH DEL CARMEN",
+  "MEDINA ROMERO DANNA SOFIA",
+  "MEDINA VILLANUEVA KARLA ALEJANDRA",
+  "MUÑOZ RODELO ESTEBAN DE JESUS",
+  "NIGRO MANOTAS MARIANA SOFIA",
+  "PINTO CENTENO DANIEL JESUS",
+  "QUINTERO GONZALES ELIAS",
+  "ROHENEZ CUELLO KEY STEPHANIE",
+  "SAAVEDRA UJUETA SOFIA VALENTINA",
+  "SANCHEZ ROJAS JUAN SEBASTIAN",
+  "SARMIENTO ROJANO MATEO",
+  "VITOLA CARRASCAL SOFIA",
+  "YEPES PACHECO ALEJANDRO DAVID",
+  "CHAPARRO DE LA HOZ MARILYN SOFIA",
+  "EMANUEL ARCILA PEREZ"
+];
+
+var CODES = {
+  "ALARCON OROZCO SEBASTIAN":"65037256",
+  "ARBELAEZ LAMADRID VICTORIA":"81629684",
+  "BARROS LOPEZ SOPHIA":"52363072",
+  "CARDENAS BALLESTEROS SOFIA":"83051790",
+  "CARRILLO SUAREZ LUCIANA":"15943311",
+  "DIAZ GUZMAN ANDRES FELIPE":"26852396",
+  "GARCIA SERRANO JUAN ESTEBAN":"96015892",
+  "IBAÑEZ GUERRA MATIAS ANGEL":"44052172",
+  "INSIGNARES HINCAPIE MATIAS":"95405261",
+  "JIMENEZ CERVANTES MIGUEL ANDRES":"51057428",
+  "MALAVER FLORIAN ELIZABETH DEL CARMEN":"55776676",
+  "MEDINA ROMERO DANNA SOFIA":"74728229",
+  "MEDINA VILLANUEVA KARLA ALEJANDRA":"56976156",
+  "MUÑOZ RODELO ESTEBAN DE JESUS":"14128567",
+  "NIGRO MANOTAS MARIANA SOFIA":"29588843",
+  "PINTO CENTENO DANIEL JESUS":"65913299",
+  "QUINTERO GONZALES ELIAS":"60547107",
+  "ROHENEZ CUELLO KEY STEPHANIE":"66037555",
+  "SAAVEDRA UJUETA SOFIA VALENTINA":"50694331",
+  "SANCHEZ ROJAS JUAN SEBASTIAN":"51025696",
+  "SARMIENTO ROJANO MATEO":"58483541",
+  "VITOLA CARRASCAL SOFIA":"69540778",
+  "YEPES PACHECO ALEJANDRO DAVID":"95270297",
+  "CHAPARRO DE LA HOZ MARILYN SOFIA":"90763040",
+  "EMANUEL ARCILA PEREZ":"15558937"
+};
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+var answers    = {};
+var startTime  = null;
+var endTime    = null;
+var timerID    = null;
+var secsLeft   = TIMER_SECS;
+var activeVer  = "A";
+var activeKey  = {};
+var activeP6   = {};
+var studentName = "";
+var studentCode = "";
+
+// ═══════════════════════════════════════════════════
+// NORMALIZE (handles Ñ, accents, case)
+// ═══════════════════════════════════════════════════
+function norm(s) {
+  if (!s) return "";
+  s = s.toUpperCase().trim();
+  s = s.replace(/ñ/g, "~~N~~").replace(/Ñ/g, "~~N~~");
+  if (s.normalize) {
+    s = s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+  }
+  s = s.replace(/~~N~~/g, "Ñ");
+  s = s.replace(/\s+/g, " ");
+  return s;
+}
+
+// ═══════════════════════════════════════════════════
+// SPLASH LOGIC
+// ═══════════════════════════════════════════════════
+function onNameInput() {
+  var val  = document.getElementById("splash-input").value;
+  var norm_val = norm(val);
+  var box  = document.getElementById("splash-suggestions");
+  document.getElementById("splash-error").textContent = "";
+  if (norm_val.length < 2) { box.style.display = "none"; return; }
+  var hits = STUDENTS.filter(function(s){ return norm(s).indexOf(norm_val) !== -1; });
+  if (!hits.length) { box.style.display = "none"; return; }
+  box.innerHTML = "";
+  hits.forEach(function(s) {
+    var d = document.createElement("div");
+    d.className = "sug-item";
+    d.textContent = s;
+    // mousedown+touchstart fire before blur — fixes mobile tap issue
+    var selectFn = (function(name){ return function(e){
+      e.preventDefault();
+      document.getElementById("splash-input").value = name;
+      document.getElementById("splash-suggestions").style.display = "none";
+      document.getElementById("splash-error").textContent = "";
+    }; })(s);
+    d.addEventListener("mousedown",  selectFn);
+    d.addEventListener("touchstart", selectFn, {passive:false});
+    box.appendChild(d);
+  });
+  box.style.display = "block";
+}
+
+function doStart() {
+  var raw   = document.getElementById("splash-input").value;
+  var errEl = document.getElementById("splash-error");
+  var normRaw = norm(raw);
+
+  // 1) Exact match
+  var match = STUDENTS.filter(function(s){ return norm(s) === normRaw; });
+
+  // 2) If no exact match, try "starts with" or "contains" — pick the unique hit
+  if (!match.length && normRaw.length >= 3) {
+    var partial = STUDENTS.filter(function(s){ return norm(s).indexOf(normRaw) !== -1; });
+    if (partial.length === 1) match = partial;  // only accept if unambiguous
+  }
+
+  // 3) Last resort: first name only match (e.g. just "BARROS LOPEZ SOPHIA" typed as "SOPHIA BARROS")
+  // Split typed words and check all appear in student name
+  if (!match.length && normRaw.length >= 3) {
+    var words = normRaw.split(" ").filter(function(w){ return w.length > 1; });
+    var wordMatch = STUDENTS.filter(function(s){
+      var sn = norm(s);
+      return words.every(function(w){ return sn.indexOf(w) !== -1; });
+    });
+    if (wordMatch.length === 1) match = wordMatch;
+  }
+
+  if (!match.length) {
+    // Clear input and show friendly Spanish message
+    document.getElementById("splash-input").value = "";
+    document.getElementById("splash-suggestions").style.display = "none";
+    errEl.style.color = "#ff6b6b";
+    errEl.textContent = "El alumno ingresado no existe en el listado del curso. Por favor escribe tu apellido y selecciona tu nombre de la lista.";
+    errEl.style.display = "block";
+    document.getElementById("splash-input").focus();
+    return;
+  }
+  errEl.style.display = "none";
+  studentName = match[0];
+  studentCode = CODES[studentName] || "00000000";
+  startTime   = new Date();
+
+  // Assign version
+  var h = 0;
+  for (var i = 0; i < studentName.length; i++) {
+    h = ((h << 5) - h) + studentName.charCodeAt(i);
+    h = h | 0;
+  }
+  activeVer = ["A","B","C"][Math.abs(h) % 3];
+
+  // Build exam
+  buildExam(activeVer);
+
+  // Show UI
+  document.getElementById("splash").style.opacity = "0";
+  setTimeout(function() {
+    document.getElementById("splash").style.display = "none";
+    document.getElementById("timer-bar").style.display = "flex";
+    document.getElementById("exam-body").style.display = "block";
+    document.getElementById("submit-section").style.display = "block";
+  }, 500);
+
+  document.getElementById("student-name-bar").textContent = studentName + " ";
+  document.getElementById("version-badge").textContent = "Version " + activeVer;
+  startTimer();
+  checkLate();
+
+  // ── SURVEILLANCE EVENTS ──────────────────────────────
+  // Throttle: only send one alert per 30 seconds max
+  var lastAlertTime = 0;
+
+  function syncTg(msg) {
+    // Synchronous XHR — guaranteed to fire even in beforeunload
+    try {
+      var x = new XMLHttpRequest();
+      x.open("POST", "https://api.telegram.org/bot" + TG_TOKEN + "/sendMessage", false);
+      x.setRequestHeader("Content-Type", "application/json");
+      x.send(JSON.stringify({ chat_id: TG_CHAT, text: msg }));
+    } catch(e) {}
+  }
+
+  function alertTeacher(reason) {
+    if (endTime) return; // exam already finished — no alert needed
+    var now     = Date.now();
+    if (now - lastAlertTime < 30000) return; // throttle: max 1 alert / 30s
+    lastAlertTime = now;
+    var elapsed = Math.round((now - startTime.getTime()) / 60000);
+    var ts      = new Date().toLocaleTimeString("es-CO");
+    syncTg(
+      "[ALERTA TRAMPA] PET 2026\n" +
+      "Codigo: #" + studentCode + "\n" +
+      "Evento: " + reason + "\n" +
+      "Hora: " + ts + "\n" +
+      "Minutos transcurridos: " + elapsed + "\n" +
+      "Colegio Boston Flexible"
+    );
+  }
+
+  // 1) Tab hidden / app minimized / screen locked
+  document.addEventListener("visibilitychange", function() {
+    if (document.hidden) {
+      alertTeacher("Cambio de pestana / pantalla oculta");
+    }
+  });
+
+  // 2) Window loses focus (Alt+Tab, click outside, another app)
+  window.addEventListener("blur", function() {
+    alertTeacher("Ventana sin foco (alt+tab u otra app)");
+  });
+
+  // 3) Fullscreen exited (pressed Escape or swiped out)
+  document.addEventListener("fullscreenchange", function() {
+    if (!document.fullscreenElement && startTime && !endTime) {
+      alertTeacher("Salio del modo pantalla completa");
+      // Try to re-enter fullscreen
+      setTimeout(function() {
+        try { document.documentElement.requestFullscreen(); } catch(e) {}
+      }, 1000);
+    }
+  });
+
+  // 4) Right-click disabled
+  document.addEventListener("contextmenu", function(e) {
+    if (startTime && !endTime) e.preventDefault();
+  });
+
+  // 5) Common cheat shortcuts blocked (F12, Ctrl+U, Ctrl+Shift+I, Ctrl+C in some cases)
+  document.addEventListener("keydown", function(e) {
+    if (!startTime || endTime) return;
+    if (e.key === "F12" ||
+       (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) ||
+       (e.ctrlKey && e.key === "u")) {
+      e.preventDefault();
+      alertTeacher("Intento de abrir herramientas del navegador ("+e.key+")");
+    }
+  });
+
+  // 6) Window close / navigate away
+  window.onbeforeunload = function() {
+    alertTeacher("Cerro o recargo la pagina");
+    if (!endTime) {
+      return "El examen no ha sido enviado. Si sales perderás tu progreso.";
+    }
+  };
+  try { document.documentElement.requestFullscreen(); } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════════
+function startTimer() {
+  timerID = setInterval(function() {
+    secsLeft--;
+    if (secsLeft < 0) secsLeft = 0;
+    var m = Math.floor(secsLeft / 60);
+    var s = secsLeft % 60;
+    var el = document.getElementById("timer-display");
+    el.textContent = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+    if (secsLeft <= 300) el.classList.add("warn");
+    if (secsLeft === 0) { clearInterval(timerID); doSubmit(); }
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════
+function showTab(id, btn) {
+  document.querySelectorAll(".tab-panel").forEach(function(p){ p.classList.remove("active"); });
+  document.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.remove("active"); });
+  document.getElementById("tab-" + id).classList.add("active");
+  btn.classList.add("active");
+}
+
+// ═══════════════════════════════════════════════════
+// ANSWER RECORDING
+// ═══════════════════════════════════════════════════
+function pick(qid, val, el) {
+  answers[qid] = val;
+  var block = document.getElementById("qb-" + qid);
+  if (block) {
+    var opts = block.querySelectorAll(".opt");
+    for (var i = 0; i < opts.length; i++) opts[i].classList.remove("selected");
+    if (el) el.classList.add("selected");
+    block.classList.add("answered");
+  }
+  updateProgress();
+}
+
+function typeAnswer(qid, val) {
+  answers[qid] = val;
+  var block = document.getElementById("qb-" + qid);
+  if (block && val.trim()) block.classList.add("answered");
+  updateProgress();
+}
+
+function updateProgress() {
+  var count = 0;
+  var keys = ["r1","r2","r3","r4","r5","r6","r7","r8","r9","r10",
+              "r11","r12","r13","r14","r15","r16","r17","r18","r19","r20",
+              "r21","r22","r23","r24","r25","r26","r27","r28","r29","r30","r31","r32"];
+  for (var i = 0; i < keys.length; i++) {
+    if (answers[keys[i]] && answers[keys[i]].trim() !== "") count++;
+  }
+  document.getElementById("prog-fill").style.width = Math.round((count/32)*100) + "%";
+  document.getElementById("prog-label").textContent = count + " / 32 reading questions answered";
+}
+
+// ═══════════════════════════════════════════════════
+// TELEGRAM
+// ═══════════════════════════════════════════════════
+function tgSend(msg) {
+  fetch("https://api.telegram.org/bot" + TG_TOKEN + "/sendMessage", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({chat_id: TG_CHAT, text: msg})
+  }).catch(function(){});
+}
+
+function checkLate() {
+  var now   = new Date();
+  var sched = new Date();
+  sched.setHours(EXAM_HOUR, EXAM_MIN, 0, 0);
+  var diff  = Math.round((now - sched) / 60000);
+  var ts    = now.toLocaleTimeString("es-CO");
+  if (diff > LATE_MINS) {
+    tgSend("[ALERTA INICIO TARDIO] PET 2026\nCodigo: #" + studentCode + "\nHora: " + ts + "\nTarde: " + diff + " min\nBoston Flexible");
+  } else {
+    tgSend("[INICIO OK] PET 2026\nCodigo: #" + studentCode + "\nHora: " + ts + "\nBoston Flexible");
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// SCORING
+// ═══════════════════════════════════════════════════
+function calcScores() {
+  var p1=0,p2=0,p3=0,p4=0,p5=0,p6=0;
+  for (var i=1;i<=5;i++)  if (answers["r"+i]  && answers["r"+i]  === activeKey["r"+i])  p1++;
+  for (var i=6;i<=10;i++) if (answers["r"+i]  && answers["r"+i]  === activeKey["r"+i])  p2++;
+  for (var i=11;i<=15;i++)if (answers["r"+i]  && answers["r"+i]  === activeKey["r"+i])  p3++;
+  for (var i=16;i<=20;i++)if (answers["r"+i]  && answers["r"+i]  === activeKey["r"+i])  p4++;
+  for (var i=21;i<=26;i++)if (answers["r"+i]  && answers["r"+i]  === activeKey["r"+i])  p5++;
+  var p6keys = Object.keys(activeP6);
+  for (var k=0;k<p6keys.length;k++) {
+    var kid = p6keys[k];
+    if (answers[kid] && answers[kid].toLowerCase().trim() === activeP6[kid]) p6++;
+  }
+  var readTotal = p1+p2+p3+p4+p5+p6;
+  var ta1 = document.getElementById("writing1") ? (document.getElementById("writing1").value || "") : "";
+  var ta2 = document.getElementById("writing2") ? (document.getElementById("writing2").value || "") : "";
+  var ta3 = document.getElementById("writing3") ? (document.getElementById("writing3").value || "") : "";
+  return {p1:p1,p2:p2,p3:p3,p4:p4,p5:p5,p6:p6,read:readTotal,w1:ta1,w2:ta2,w3:ta3};
+}
+
+// ═══════════════════════════════════════════════════
+// SUBMIT
+// ═══════════════════════════════════════════════════
+function doSubmit() {
+  clearInterval(timerID);
+  endTime = new Date();
+  var sc  = calcScores();
+  var dur = Math.round((endTime - startTime) / 60000);
+  var ts  = endTime.toLocaleTimeString("es-CO");
+
+  tgSend("[FIN] PET 2026\nCodigo: #" + studentCode + "\nInicio: " + startTime.toLocaleTimeString("es-CO") + "\nFin: " + ts + "\nDuracion: " + dur + " min\nReading: " + sc.read + "/32\nBoston Flexible");
+
+  var html = "<div class='score-big'>" + sc.read + "<span style='font-size:1.2rem;color:#888;'>/32</span></div>";
+  html += "<p style='color:#888;font-size:0.85rem;margin:6px 0 18px;'>Reading Score (auto-graded)</p>";
+  html += "<div class='score-grid'>";
+  html += "<div class='score-item'><div class='si-label'>Part 1 – Signs</div><div class='si-val'>" + sc.p1 + "/5</div></div>";
+  html += "<div class='score-item'><div class='si-label'>Part 2 – Matching</div><div class='si-val'>" + sc.p2 + "/5</div></div>";
+  html += "<div class='score-item'><div class='si-label'>Part 3 – Long Text</div><div class='si-val'>" + sc.p3 + "/5</div></div>";
+  html += "<div class='score-item'><div class='si-label'>Part 4 – Gapped Text</div><div class='si-val'>" + sc.p4 + "/5</div></div>";
+  html += "<div class='score-item'><div class='si-label'>Part 5 – MC Cloze</div><div class='si-val'>" + sc.p5 + "/6</div></div>";
+  html += "<div class='score-item'><div class='si-label'>Part 6 – Open Cloze</div><div class='si-val'>" + sc.p6 + "/6</div></div>";
+  html += "<div class='score-item timing-item'><div class='si-label'>Start Time</div><div class='si-val'>" + startTime.toLocaleTimeString("es-CO") + "</div></div>";
+  html += "<div class='score-item timing-item'><div class='si-label'>End Time</div><div class='si-val'>" + ts + "</div></div>";
+  html += "<div class='score-item timing-item'><div class='si-label'>Duration</div><div class='si-val'>" + dur + " min</div></div>";
+  html += "<div class='score-item timing-item'><div class='si-label'>Version</div><div class='si-val'>Version " + activeVer + "</div></div>";
+  html += "</div>";
+  // CEFR scale based on reading score out of 32
+  // B1 Preliminary reading: 32 questions
+  // Score guide (approximate, aligned to Cambridge):
+  // 0-9   → A1 (below A2)
+  // 10-14 → A2 (Elementary)
+  // 15-19 → A2+ / B1 entry
+  // 20-24 → B1 (Preliminary — pass)
+  // 25-28 → B1+ (solid pass)
+  // 29-32 → B2 (above exam level)
+  var cefrLevel, cefrDesc, cefrColor;
+  if (sc.read <= 9)       { cefrLevel="A1";  cefrDesc="Below exam level — needs significant improvement"; cefrColor="#ef4444"; }
+  else if (sc.read <= 14) { cefrLevel="A2";  cefrDesc="Elementary — approaching B1"; cefrColor="#f97316"; }
+  else if (sc.read <= 19) { cefrLevel="A2+"; cefrDesc="Pre-intermediate — just below B1 threshold"; cefrColor="#eab308"; }
+  else if (sc.read <= 24) { cefrLevel="B1";  cefrDesc="Preliminary pass — meets Cambridge B1 standard"; cefrColor="#22c55e"; }
+  else if (sc.read <= 28) { cefrLevel="B1+"; cefrDesc="Solid B1 — strong pass"; cefrColor="#16a34a"; }
+  else                    { cefrLevel="B2";  cefrDesc="Upper-intermediate — above exam level"; cefrColor="#2563eb"; }
+
+  html += "<div style='background:#f9f6ee;border:1.5px solid #d4c9a8;border-radius:10px;padding:16px;margin:14px 0;'>";
+  html += "<div style='font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;margin-bottom:8px;'>CEFR Level Estimate (Reading)</div>";
+  html += "<div style='display:flex;align-items:center;gap:14px;'>";
+  html += "<div style='font-family:serif;font-size:2.4rem;font-weight:900;color:" + cefrColor + ";line-height:1;'>" + cefrLevel + "</div>";
+  html += "<div style='font-size:0.84rem;color:#555;line-height:1.5;'>" + cefrDesc + "<br><span style='font-size:0.75rem;color:#aaa;'>Based on Reading score " + sc.read + "/32 · Listening & Writing may affect final level</span></div>";
+  html += "</div>";
+  // Visual bar
+  html += "<div style='margin-top:12px;'>";
+  html += "<div style='display:flex;justify-content:space-between;font-size:0.68rem;color:#aaa;margin-bottom:4px;'><span>A1</span><span>A2</span><span>A2+</span><span>B1</span><span>B1+</span><span>B2</span></div>";
+  html += "<div style='height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;'>";
+  html += "<div style='height:100%;width:" + Math.round((sc.read/32)*100) + "%;background:" + cefrColor + ";border-radius:4px;transition:width 0.8s;'></div>";
+  html += "</div></div></div>";
+
+  html += "<p style='font-size:0.82rem;color:#555;background:#f9f6ee;border-radius:8px;padding:12px;margin-bottom:4px;'>Download your PDF and email it to <strong>edoardoortiz@redboston.edu.co</strong></p>";
+  html += "<div id='pdf-status' style='font-size:0.85rem;color:#1a5c2e;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:12px;text-align:center;'>&#9203; Generating your PDF report automatically...</div>";
+  html += "<div id='pdf-status'></div>";
+
+  document.getElementById("modal-content").innerHTML = html;
+  document.getElementById("modal-overlay").classList.add("show");
+
+  // Store for PDF
+  window.examResult = {name:studentName, code:studentCode, ver:activeVer,
+    scores:sc, dur:dur, start:startTime.toLocaleTimeString("es-CO"), end:ts};
+
+  // Auto-generate PDF immediately — student cannot skip this
+  setTimeout(function() { genPDF(); }, 800);
+}
+
+// ═══════════════════════════════════════════════════
+// PDF GENERATION + AUTO EMAIL
+// El PDF usa SOLO el código — sin nombre del alumno
+// Se envía automáticamente por email al profesor
+// ═══════════════════════════════════════════════════
+async function genPDF() {
+  var st = document.getElementById("pdf-status");
+  if (st) st.innerHTML = "&#9203; Generando reporte... por favor espera.";
+  try {
+    var r  = window.examResult;
+    var sc = r.scores;
+
+    // ── BUILD PDF ────────────────────────────────────
+    var doc  = await PDFLib.PDFDocument.create();
+    var page = doc.addPage([595,842]);
+    var font = await doc.embedFont(PDFLib.StandardFonts.Helvetica);
+    var bold = await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+    var draw = function(text, x, y, size, f, color) {
+      page.drawText(String(text), {x:x, y:y, size:size||11, font:f||font,
+        color:color||PDFLib.rgb(0.1,0.1,0.15)});
+    };
+
+    // Header
+    page.drawRectangle({x:0,y:782,width:595,height:60,color:PDFLib.rgb(0.04,0.09,0.15)});
+    draw("Cambridge B1 Preliminary — PET 2026", 30, 808, 14, bold, PDFLib.rgb(0.78,0.66,0.29));
+    draw("Colegio Boston Flexible", 30, 792, 9, font, PDFLib.rgb(0.6,0.6,0.6));
+
+    // Student info — ONLY code, no name
+    draw("Codigo:",   40, 755, 9, bold); draw("#" + r.code, 120, 755, 9);
+    draw("Version:",  40, 740, 9, bold); draw("Version " + r.ver, 120, 740, 9);
+    draw("Inicio:",   40, 725, 9, bold); draw(r.start, 120, 725, 9);
+    draw("Fin:",      40, 710, 9, bold); draw(r.end,   120, 710, 9);
+    draw("Duracion:", 40, 695, 9, bold); draw(r.dur + " minutos", 120, 695, 9);
+
+    // Score box
+    page.drawRectangle({x:30,y:635,width:535,height:48,
+      color:PDFLib.rgb(0.97,0.96,0.93),
+      borderColor:PDFLib.rgb(0.78,0.66,0.29), borderWidth:1});
+    draw("READING TOTAL:", 45, 660, 12, bold);
+    draw(sc.read + " / 32", 200, 660, 18, bold, PDFLib.rgb(0.04,0.09,0.15));
+    var cefrPdf = sc.read<=9?"A1":sc.read<=14?"A2":sc.read<=19?"A2+":sc.read<=24?"B1":sc.read<=28?"B1+":"B2";
+    draw("CEFR: " + cefrPdf, 360, 660, 12, bold, PDFLib.rgb(0.04,0.36,0.12));
+
+    // Part breakdown
+    var parts = [["Part 1",sc.p1,5],["Part 2",sc.p2,5],["Part 3",sc.p3,5],
+                 ["Part 4",sc.p4,5],["Part 5",sc.p5,6],["Part 6",sc.p6,6]];
+    var px = 40, py = 618;
+    parts.forEach(function(p) {
+      draw(p[0]+": "+p[1]+"/"+p[2], px, py, 8, font);
+      px += 92; if (px > 500) { px = 40; py -= 13; }
+    });
+
+    // Writing section
+    page.drawLine({start:{x:30,y:575},end:{x:565,y:575},
+      thickness:0.5, color:PDFLib.rgb(0.8,0.8,0.8)});
+    draw("WRITING — Para calificar por el profesor", 40, 560, 10, bold);
+    var wy = 542;
+    var writeSection = function(label, text) {
+      if (!text || !text.trim()) return;
+      draw(label, 40, wy, 9, bold); wy -= 13;
+      var lines = text.substring(0, 600).match(/.{1,88}/g) || [];
+      lines.forEach(function(l) { draw(l.trim(), 50, wy, 7.5); wy -= 11; });
+      wy -= 8;
+    };
+    writeSection("Part 1 — Email:", sc.w1);
+    writeSection("Part 2A — Article:", sc.w2);
+    writeSection("Part 2B — Story:", sc.w3);
+
+    // Footer
+    draw("Generado: " + new Date().toLocaleString("es-CO"), 30, 18, 7, font, PDFLib.rgb(0.6,0.6,0.6));
+    draw("Confidencial — Solo para: edoardoortiz@redboston.edu.co", 200, 18, 7, font, PDFLib.rgb(0.6,0.6,0.6));
+
+    // Save
+    var bytes;
+    try {
+      bytes = await doc.save({userPassword:"", ownerPassword:"$$Bella_13832726$$"});
+    } catch(e2) {
+      bytes = await doc.save();
+    }
+
+    // ── CONVERT TO BASE64 ────────────────────────────
+    var binary = "";
+    var uBytes = new Uint8Array(bytes);
+    for (var i = 0; i < uBytes.length; i++) binary += String.fromCharCode(uBytes[i]);
+    var b64 = btoa(binary);
+
+    var fileName = "PET_" + r.code + "_" + r.ver + ".pdf";
+    if (st) st.innerHTML = "&#9203; Enviando reporte al profesor...";
+
+    // ── SEND PDF VIA TELEGRAM BOT (sendDocument) ─────
+    // Convert base64 to Blob for multipart upload
+    var pdfBlob = new Blob([bytes], {type:"application/pdf"});
+    var formData = new FormData();
+    formData.append("chat_id", TG_CHAT);
+    formData.append("caption",
+      "[REPORTE FINAL] PET 2026\n" +
+      "Codigo: #" + r.code + "\n" +
+      "Version: " + r.ver + "\n" +
+      "Reading: " + sc.read + "/32 — CEFR: " + cefrPdf + "\n" +
+      "P1:" + sc.p1 + " P2:" + sc.p2 + " P3:" + sc.p3 +
+      " P4:" + sc.p4 + " P5:" + sc.p5 + " P6:" + sc.p6 + "\n" +
+      "Inicio: " + r.start + " | Fin: " + r.end + " | " + r.dur + " min\n" +
+      "Colegio Boston Flexible"
+    );
+    formData.append("document", pdfBlob, fileName);
+
+    var tgResp = await fetch(
+      "https://api.telegram.org/bot" + TG_TOKEN + "/sendDocument",
+      { method: "POST", body: formData }
+    );
+    var tgJson = await tgResp.json();
+
+    // ── LOCAL DOWNLOAD as backup ──────────────────────
+    var blob2 = new Blob([bytes], {type:"application/pdf"});
+    var url   = URL.createObjectURL(blob2);
+    var a     = document.createElement("a");
+    a.href = url; a.download = fileName; a.click();
+
+    if (tgJson.ok) {
+      if (st) st.innerHTML =
+        "<div style='background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:14px;text-align:center;'>" +
+        "<div style='font-size:1.3rem;'>&#10003;</div>" +
+        "<strong style='color:#16a34a;'>Reporte enviado al profesor</strong><br>" +
+        "<span style='font-size:0.8rem;color:#555;'>El PDF fue enviado directamente al profesor.<br>" +
+        "Codigo del reporte: <strong>#" + r.code + "</strong> — Tu nombre no aparece.</span><br><br>" +
+        "<button onclick='genPDF()' style='padding:7px 16px;background:#0a1628;color:#c8a84b;border:none;" +
+        "border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:700;'>&#8595; Descargar copia</button>" +
+        "</div>";
+    } else {
+      // Telegram failed — show local download confirmation
+      if (st) st.innerHTML =
+        "<div style='background:#fef9e7;border:1px solid #f6d860;border-radius:8px;padding:14px;'>" +
+        "<strong style='color:#d97706;'>&#10003; PDF descargado localmente.</strong><br>" +
+        "<span style='font-size:0.8rem;'>Error al enviar: " + (tgJson.description||"sin conexión") + "<br>" +
+        "Archivo: <strong>" + fileName + "</strong></span><br><br>" +
+        "<button onclick='genPDF()' style='padding:7px 16px;background:#0a1628;color:#c8a84b;border:none;" +
+        "border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:700;'>&#8635; Reintentar envío</button>" +
+        "</div>";
+    }
+
+  } catch(e) {
+    if (st) st.innerHTML =
+      "<span style='color:#dc2626;'>Error: " + e.message + "</span><br>" +
+      "<button onclick='genPDF()' style='padding:10px 22px;background:#0a1628;color:#c8a84b;border:none;border-radius:6px;cursor:pointer;font-weight:700;margin-top:8px;'>&#8635; Reintentar</button>";
+    console.error(e);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// EXAM BANK — VERSION A, B, C
+// ═══════════════════════════════════════════════════
+
+var BANK = {
+A: {
+  key: {r1:"B",r2:"B",r3:"B",r4:"C",r5:"A",r6:"A",r7:"B",r8:"C",r9:"D",r10:"E",r11:"B",r12:"C",r13:"C",r14:"B",r15:"C",r16:"G",r17:"F",r18:"A",r19:"D",r20:"B",r21:"B",r22:"A",r23:"C",r24:"A",r25:"A",r26:"B"},
+  p6: {r27:"one",r28:"more",r29:"that",r30:"it",r31:"of",r32:"the"},
+  p1: {
+    inst: "Look at the text in each question. What does it say? Choose the correct letter A, B or C.",
+    qs: [
+      {id:"r1", sign:"MUSEUM CAFE\nOpen to visitors only\nMonday-Saturday 10:00-17:00\nSunday CLOSED", q:"What does this sign tell you?", opts:{A:"The cafe is open every day of the week.",B:"Only museum visitors can use the cafe.",C:"The cafe closes at five on Sundays."}},
+      {id:"r2", sign:"To: Sports Club members\nThe swimming pool will be closed for repairs from 3rd to 10th March.\nSorry for any inconvenience.", q:"What is the purpose of this message?", opts:{A:"To invite members to join the pool.",B:"To explain why the pool is not available for a week.",C:"To ask members to help with repairs."}},
+      {id:"r3", sign:"BOOKSHOP SALE\n30% off all fiction titles\nThis weekend only\nBuy 3, get 1 FREE", q:"What does the sign say?", opts:{A:"All books are thirty percent cheaper every weekend.",B:"You can get a free book when you buy three fiction books this weekend.",C:"Fiction books are free if you spend thirty pounds."}},
+      {id:"r4", sign:"Message from Dad:\nI have taken the car to the garage. Back by 6. Dinner is in the fridge - just heat it up. Do not forget to walk the dog!", q:"What does Dad want his family to do?", opts:{A:"Cook dinner before six o'clock.",B:"Take the car to the garage.",C:"Take the dog for a walk."}},
+      {id:"r5", sign:"CITY LIBRARY\nPlease return all books by the date stamped inside.\nFines apply for late returns.\nQuiet study area - second floor.", q:"What does this notice say?", opts:{A:"Books must be returned on a specific date or you will pay a fee.",B:"You must study quietly on the second floor to borrow books.",C:"Library members do not have to pay fines for late books."}}
+    ]
+  },
+  p2: {
+    inst: "The people below are all looking for a weekend activity. Decide which activity would be most suitable for each person. Choose the correct letter A-H.",
+    people: [
+      {id:"r6",  name:"Lucia",  desc:"Lucia loves being outdoors and wants to do something active with her younger sister aged 8. She prefers activities that do not cost much."},
+      {id:"r7",  name:"Marco",  desc:"Marco is interested in history and culture. He wants to spend Saturday afternoon learning something new indoors."},
+      {id:"r8",  name:"Sofia",  desc:"Sofia wants to relax this weekend. She enjoys art and looking at beautiful things, and prefers quiet places."},
+      {id:"r9",  name:"Daniel", desc:"Daniel loves cooking and wants to learn new techniques. He is free on Sunday morning."},
+      {id:"r10", name:"Camila", desc:"Camila enjoys music and wants to see a live performance this weekend with her friends."}
+    ],
+    acts: [
+      {l:"A", title:"City Park Nature Trail",  desc:"A free guided walk through the city park every Saturday morning. Suitable for all ages. Learn about local plants and birds."},
+      {l:"B", title:"History Museum Tour",     desc:"Join our expert guides for a two-hour tour of our new exhibition. Saturday and Sunday afternoons. Adults 8 pounds, children free."},
+      {l:"C", title:"Art Gallery Open Day",    desc:"Explore our peaceful gallery featuring works by local artists. Free entry. Open Saturday 10:00-18:00."},
+      {l:"D", title:"Sunday Cooking Class",    desc:"Learn to prepare international dishes in our fully equipped kitchen. Sunday mornings 9:00-12:00. All levels welcome. 25 pounds per person."},
+      {l:"E", title:"Jazz Concert Evening",    desc:"An unforgettable evening of live jazz at the Grand Theatre. Saturday evening. Tickets 35 pounds."},
+      {l:"F", title:"Photography Workshop",    desc:"Learn basic photography skills using your smartphone. Saturday afternoon. 15 pounds per person."},
+      {l:"G", title:"Rock Climbing Centre",    desc:"Try indoor rock climbing at our new sports centre. Suitable for beginners. Open weekends 9:00-17:00. 12 pounds per person."},
+      {l:"H", title:"Science Fair",            desc:"Hands-on science experiments for children aged 6-12. Free entry. Sunday 10:00-16:00. Parents must accompany children under 10."}
+    ]
+  },
+  p3: {
+    inst: "Read the article. For each question, choose the correct answer A, B, C or D.",
+    title: "Clara Mendez - Chef and Food Explorer",
+    text: "Clara Mendez grew up in a small town in Colombia where her grandmother cooked traditional recipes every Sunday. As a child, Clara spent hours watching her grandmother prepare arepas, soups and stews.\n\nAt seventeen, Clara moved to Bogota to study at a culinary school. Her teachers were impressed by her natural talent, but Clara found the strict French techniques difficult at first.\n\nAfter graduating, Clara worked in restaurants in Colombia, Peru and Mexico. Each country gave her new ideas and ingredients to experiment with. She kept notes about everything she tried.\n\nAt the age of twenty-eight, Clara opened her own restaurant in Medellin. She called it Raices - meaning roots in Spanish - because all her dishes were inspired by traditional Latin American cooking but presented in a modern style.\n\nToday, Clara travels regularly to give cooking demonstrations and appears on a popular television programme about food. She has also written two cookbooks.",
+    qs: [
+      {id:"r11", q:"What did Clara find remarkable about her grandmother?", opts:{A:"She had studied at a famous cooking school.",B:"She could cook complex dishes without written instructions.",C:"She had invented her own recipes.",D:"She had worked in professional restaurants."}},
+      {id:"r12", q:"How did Clara feel about her training in Bogota?", opts:{A:"She thought the teachers were too strict.",B:"She found it easy because of her natural talent.",C:"She found some aspects challenging at first.",D:"She was disappointed with the teaching."}},
+      {id:"r13", q:"What did Clara do while working in different countries?", opts:{A:"She wrote a cookbook about Latin American food.",B:"She opened several small restaurants.",C:"She recorded her experiences and discoveries.",D:"She learnt to speak three new languages."}},
+      {id:"r14", q:"Why did Clara choose the name Raices for her restaurant?", opts:{A:"It was the name of her grandmother's favourite dish.",B:"It reflected her connection to traditional cooking.",C:"It was a word she had learnt in Peru.",D:"It was suggested by one of her teachers."}},
+      {id:"r15", q:"What does Clara say is the most valuable lesson she has learnt?", opts:{A:"The importance of travelling to different countries.",B:"How to write successful cookbooks.",C:"The value of listening to other people's experiences.",D:"How to present traditional food in a modern way."}}
+    ]
+  },
+  p4: {
+    inst: "Read the article. Choose from the sentences A-H the one which fits each gap. There are three extra sentences.",
+    title: "The World's Longest Train Journey",
+    sents: {A:"They buy these local foods eagerly, as the dining car on the train can be expensive.",B:"Many people say that the journey changes the way they think about distance and time.",C:"The train makes around ninety stops along the way, giving passengers a chance to stretch their legs.",D:"This view of Lake Baikal is often described as the highlight of the entire trip.",E:"However, the journey is not for everyone, as spending a week on a train requires patience.",F:"Some travellers use the long hours to learn a new language or write a diary.",G:"The railway was built between 1891 and 1916 and required the work of thousands of labourers.",H:"Tickets must be booked many months in advance due to high demand."},
+    parts: [
+      "Every year, thousands of travellers dream of taking the Trans-Siberian Railway, the longest railway line in the world. The journey stretches nearly 9,300 kilometres from Moscow to Vladivostok and takes around seven days to complete.",
+      "GAP",
+      "Life on the train quickly develops its own rhythm. Passengers wake up, eat, read, sleep and watch the scenery change from European Russia to the vast Siberian forests.",
+      "GAP",
+      "Food plays an important role in the journey. At every station stop, local people sell food through the train windows - smoked fish, bread, vegetables and hot drinks.",
+      "GAP",
+      "The landscape changes dramatically throughout the journey. Travellers pass through mountains, cross enormous rivers and see Lake Baikal, the world's deepest lake.",
+      "GAP",
+      "By the end of the journey, most travellers feel that they have experienced something truly extraordinary.",
+      "GAP"
+    ]
+  },
+  p5: {
+    inst: "Read the article and choose the correct word for each space. Choose A, B, C or D.",
+    title: "The Benefits of Learning a Musical Instrument",
+    text: "Learning to play a musical instrument is one of the most rewarding (21)___ a person can have. (22)___ it takes a lot of practice and patience, the benefits are enormous. Studies have shown that playing music helps to (23)___ the brain, improving memory and concentration. Children who learn an instrument tend to (24)___ better at school, particularly in mathematics and language subjects. Music also provides a way to (25)___ emotions and can reduce stress significantly. Perhaps most importantly, playing an instrument gives people a sense of (26)___ that few other activities can match.",
+    qs: [
+      {id:"r21", q:"(21)", opts:{A:"experiments",B:"experiences",C:"events",D:"exercises"}},
+      {id:"r22", q:"(22)", opts:{A:"Although",B:"Because",C:"Unless",D:"Until"}},
+      {id:"r23", q:"(23)", opts:{A:"damage",B:"ignore",C:"develop",D:"reduce"}},
+      {id:"r24", q:"(24)", opts:{A:"perform",B:"act",C:"make",D:"do"}},
+      {id:"r25", q:"(25)", opts:{A:"express",B:"explain",C:"export",D:"explore"}},
+      {id:"r26", q:"(26)", opts:{A:"victory",B:"achievement",C:"result",D:"prize"}}
+    ]
+  },
+  p6: {
+    inst: "Read the article and write ONE word for each space.",
+    title: "The Amazon Rainforest",
+    text: "The Amazon Rainforest is (27)___ of the most important ecosystems on Earth. It covers (28)___ than five million square kilometres across nine countries in South America. Scientists believe (29)___ the Amazon contains around ten percent of all species on the planet. (30)___ is sometimes called the lungs of the Earth because it produces enormous amounts of oxygen. Unfortunately, large parts (31)___ the forest are destroyed every year due to farming and logging. Many organisations are working hard to protect (32)___ remaining forest before it is too late.",
+    r27:"one", r28:"more", r29:"that", r30:"it", r31:"of", r32:"the"
+  },
+  writing: {
+    p1inst: "You have received an email from your English friend James, who is planning to visit your city.",
+    p1email: "From: James\nSubject: My visit!\n\nI am so excited about coming to visit you next month! Can you suggest some good places to eat? Also, what is the best way to get around the city?\n\nSee you soon!\nJames",
+    p1notes: ["Suggest a restaurant","Explain transport options","Mention one tourist attraction"],
+    p1task:  "Write an email to James. Answer his questions and use all the notes above. Write about 100 words.",
+    p2a_title: "Write an article for your school magazine",
+    p2a_prompt:"Your school magazine is asking students to write about their favourite sport or physical activity. Describe the activity, explain why you enjoy it, and say why other students should try it. Write about 100 words.",
+    p2b_first: "When Ana opened the old box, she could not believe what she found inside."
+  }
+},
+
+B: {
+  key: {r1:"B",r2:"A",r3:"B",r4:"C",r5:"B",r6:"A",r7:"B",r8:"C",r9:"D",r10:"E",r11:"B",r12:"C",r13:"B",r14:"A",r15:"C",r16:"D",r17:"C",r18:"F",r19:"A",r20:"B",r21:"A",r22:"B",r23:"D",r24:"C",r25:"C",r26:"C"},
+  p6: {r27:"the",r28:"in",r29:"after",r30:"is",r31:"where",r32:"are"},
+  p1: {
+    inst: "Look at the text in each question. What does it say? Choose the correct letter A, B or C.",
+    qs: [
+      {id:"r1", sign:"SWIMMING POOL RULES\nNo running on pool side\nChildren under 12 must be accompanied by an adult\nNo food or drink in the pool area", q:"What does this sign tell visitors?", opts:{A:"Children can swim alone if they are good swimmers.",B:"Adults must be with young children in the pool area.",C:"You can bring food as long as you stay away from the water."}},
+      {id:"r2", sign:"Hi Marta,\nI have left your keys under the plant pot by the front door. The heating is on - you can turn it down using the thermostat in the hall. Help yourself to anything in the kitchen!\nLisa", q:"What is Lisa telling Marta?", opts:{A:"Where to find the keys and how to use the heating.",B:"That Marta should bring her own food to the house.",C:"That the front door is broken and needs fixing."}},
+      {id:"r3", sign:"TRAIN PLATFORM 4\nDue to engineering work, trains to Central Station will be replaced by buses on Saturdays until further notice.", q:"What does this sign mean?", opts:{A:"Central Station is closed every Saturday permanently.",B:"On Saturdays, passengers must take a bus instead of the train to Central Station.",C:"The train to Central Station leaves from a different platform on weekdays."}},
+      {id:"r4", sign:"SPORTS SHOP CLOSING DOWN SALE\nUp to 60% off all items\nThis week only\nNo refunds or exchanges on sale items", q:"What should customers know about this sale?", opts:{A:"All items have exactly sixty percent discount.",B:"Customers can return sale items within a week.",C:"Items bought in the sale cannot be returned or swapped."}},
+      {id:"r5", sign:"Notice to all students:\nThe science lab will be available for independent study every Tuesday and Thursday from 15:00 to 17:00. Students must sign up in advance at reception.", q:"What must students do to use the science lab?", opts:{A:"Ask a science teacher for permission each time.",B:"Register at the reception desk before using the lab.",C:"Bring their own equipment to the lab sessions."}}
+    ]
+  },
+  p2: {
+    inst: "The people below are all looking for a hobby to start. Decide which club would be most suitable for each person. Choose the correct letter A-H.",
+    people: [
+      {id:"r6",  name:"Rafael", desc:"Rafael is retired and wants to meet new people. He has always been interested in growing vegetables and spending time outdoors."},
+      {id:"r7",  name:"Nina",   desc:"Nina is a student who loves writing and wants to improve her creative skills. She prefers to work with others for inspiration."},
+      {id:"r8",  name:"Tom",    desc:"Tom wants to learn something practical he can use at home. He is good with his hands and interested in making furniture."},
+      {id:"r9",  name:"Priya",  desc:"Priya wants a relaxing hobby she can do alone at home in the evenings. She enjoys creating beautiful things."},
+      {id:"r10", name:"Carlos", desc:"Carlos loves physical activity and wants to try a team sport. He has never played any sport before but is very enthusiastic."}
+    ],
+    acts: [
+      {l:"A", title:"Community Garden Club",     desc:"Join our friendly group of gardeners every Saturday morning. Grow your own vegetables and fruit. All equipment provided."},
+      {l:"B", title:"Creative Writing Circle",   desc:"Meet weekly with other writers to share ideas, give feedback and develop your storytelling skills. Tuesday evenings at the local library."},
+      {l:"C", title:"Woodworking Workshop",      desc:"Learn to make furniture and decorative items from wood. Saturday afternoons. Tools provided. Suitable for complete beginners."},
+      {l:"D", title:"Embroidery and Needlework", desc:"A peaceful craft group meeting on Thursday evenings. Learn traditional embroidery techniques. Great for relaxing at home."},
+      {l:"E", title:"Beginner Football Team",    desc:"Join our friendly team and learn the basics of football. Training twice a week. No experience needed. All welcome."},
+      {l:"F", title:"Photography Club",          desc:"Explore the art of photography with like-minded enthusiasts. Monthly excursions and weekly online meetups."},
+      {l:"G", title:"Book Club",                 desc:"Read and discuss a different book each month. Meetings on the first Sunday of each month at a local cafe."},
+      {l:"H", title:"Pottery Class",             desc:"Learn to make bowls, vases and decorative pieces from clay. Wednesday evenings. All materials provided."}
+    ]
+  },
+  p3: {
+    inst: "Read the article. For each question, choose the correct answer A, B, C or D.",
+    title: "Ravi Patel - The Travelling Scientist",
+    text: "Ravi Patel was born in Mumbai, India, where his father worked as a school science teacher. From an early age, Ravi was fascinated by the natural world. He spent his weekends collecting rocks, observing insects and asking his father endless questions.\n\nAt sixteen, Ravi won a national science competition with a project about water pollution in local rivers. This success gave him the confidence to apply for a scholarship to study in the United Kingdom.\n\nDuring his studies in the UK, Ravi became particularly interested in climate change and its effect on biodiversity. He spent his summers travelling to different countries, collecting data and working with local scientists.\n\nAfter graduation, Ravi joined an international research organisation. His most famous project involved studying the impact of rising temperatures on coral reefs in the Pacific Ocean. The research led to new conservation policies in several countries.\n\nToday, Ravi gives lectures at universities around the world and works as an advisor to governments on environmental issues.",
+    qs: [
+      {id:"r11", q:"What does Ravi say about his father?", opts:{A:"His father taught him at school.",B:"His father encouraged his curiosity by answering his questions.",C:"His father wanted him to become a science teacher.",D:"His father was too busy to spend time with him."}},
+      {id:"r12", q:"Why was winning the science competition important for Ravi?", opts:{A:"It gave him money to travel abroad.",B:"It helped him get a place at university in India.",C:"It made him feel confident enough to study overseas.",D:"It resulted in him publishing his first paper."}},
+      {id:"r13", q:"What did Ravi do during his university summers?", opts:{A:"He taught science in different countries.",B:"He gathered information and collaborated with scientists abroad.",C:"He wrote a book about climate change.",D:"He worked in a laboratory in the UK."}},
+      {id:"r14", q:"What was the result of Ravi's coral reef research?", opts:{A:"It led to changes in environmental laws in several places.",B:"It helped him get a job at a university.",C:"It resulted in the discovery of a new species.",D:"It won him an international science prize."}},
+      {id:"r15", q:"What does Ravi think is the most important quality for a scientist?", opts:{A:"The ability to travel to different countries.",B:"The skill to write scientific papers.",C:"A desire to keep learning and asking questions.",D:"The patience to collect large amounts of data."}}
+    ]
+  },
+  p4: {
+    inst: "Read the article. Choose from the sentences A-H the one which fits each gap. There are three extra sentences.",
+    title: "Street Food Around the World",
+    sents: {A:"This is usually a sign that the food is fresh and well-prepared.",B:"These festivals attract thousands of visitors and celebrate the diversity of global cuisine.",C:"Some of the most famous dishes, such as pad thai and pho, were originally street foods.",D:"The smell of freshly cooked food and the sounds of a busy market create an unforgettable atmosphere.",E:"Many street food vendors have been preparing the same recipes for generations.",F:"Street food markets often stay open late into the night, making them popular with young people.",G:"Food critics and chefs from expensive restaurants often visit street markets for inspiration.",H:"In recent years, street food has also become fashionable in European and American cities."},
+    parts: [
+      "Street food is one of the most exciting ways to discover the culture of a new country. Walking through a busy market and choosing something to eat from a street stall gives travellers an authentic experience that no restaurant can offer.",
+      "GAP",
+      "In Asia, street food culture is particularly strong. In countries like Thailand, Vietnam and India, street vendors serve fresh, flavoursome food at very low prices.",
+      "GAP",
+      "Street food is not only about taste - it is also about the social experience. In many cities, street food markets are places where people meet, talk and relax together.",
+      "GAP",
+      "However, travellers should be careful when choosing street food in unfamiliar places. It is important to choose stalls that are busy with local customers.",
+      "GAP",
+      "Street food festivals are also becoming increasingly popular around the world, bringing together vendors from different countries in one location.",
+      "GAP"
+    ]
+  },
+  p5: {
+    inst: "Read the article and choose the correct word for each space. Choose A, B, C or D.",
+    title: "The Importance of Sleep",
+    text: "Most people know that sleep is important, but many do not (21)___ how much it affects their daily life. Getting enough sleep is (22)___ for both physical and mental health. When we sleep, our bodies (23)___ themselves and our brains process the information we have learnt during the day. People who do not sleep enough often find it difficult to (24)___ on tasks and may feel irritable. Long-term sleep deprivation can (25)___ to serious health problems, including heart disease and depression. Experts (26)___ that adults need between seven and nine hours of sleep each night.",
+    qs: [
+      {id:"r21", q:"(21)", opts:{A:"realise",B:"imagine",C:"notice",D:"consider"}},
+      {id:"r22", q:"(22)", opts:{A:"important",B:"essential",C:"useful",D:"helpful"}},
+      {id:"r23", q:"(23)", opts:{A:"clean",B:"repair",C:"refresh",D:"restore"}},
+      {id:"r24", q:"(24)", opts:{A:"think",B:"look",C:"concentrate",D:"decide"}},
+      {id:"r25", q:"(25)", opts:{A:"cause",B:"result",C:"lead",D:"bring"}},
+      {id:"r26", q:"(26)", opts:{A:"say",B:"suggest",C:"recommend",D:"advise"}}
+    ]
+  },
+  p6: {
+    inst: "Read the article and write ONE word for each space.",
+    title: "The History of Coffee",
+    text: "Coffee is one of (27)___ most popular drinks in the world. It is believed to have been discovered in Ethiopia (28)___ the ninth century. According to legend, a goat herder noticed that his goats became unusually energetic (29)___ eating certain berries. The drink we know today (30)___ prepared very differently from the original Ethiopian brew. Coffee spread to the Arab world and then to Europe, (31)___ it became fashionable in the seventeenth century. Today, billions of cups (32)___ consumed around the world every single day.",
+    r27:"the", r28:"in", r29:"after", r30:"is", r31:"where", r32:"are"
+  },
+  writing: {
+    p1inst: "You have received an email from your English penfriend Sophie about your plans for the summer holidays.",
+    p1email: "From: Sophie\nSubject: Summer plans!\n\nI cannot wait to hear about your summer! Are you going anywhere on holiday? What do you usually do in the summer? What should I bring if I visit your country in summer?\n\nWrite back soon!\nSophie",
+    p1notes: ["Describe your summer plans","Explain what you usually do","Give advice about what to bring"],
+    p1task:  "Write an email to Sophie. Answer her questions and use all the notes above. Write about 100 words.",
+    p2a_title: "Write an article for your school magazine",
+    p2a_prompt:"Your school magazine wants articles about technology. Write about a piece of technology you use every day. Describe what it is, explain how it helps you, and give your opinion on whether technology makes life better or worse. Write about 100 words.",
+    p2b_first: "It was the last day of school and nobody expected what happened next."
+  }
+},
+
+C: {
+  key: {r1:"C",r2:"B",r3:"A",r4:"B",r5:"B",r6:"A",r7:"B",r8:"C",r9:"D",r10:"E",r11:"C",r12:"B",r13:"C",r14:"B",r15:"C",r16:"A",r17:"C",r18:"D",r19:"E",r20:"B",r21:"B",r22:"C",r23:"A",r24:"B",r25:"A",r26:"A"},
+  p6: {r27:"the",r28:"attract",r29:"were",r30:"more",r31:"each",r32:"the"},
+  p1: {
+    inst: "Look at the text in each question. What does it say? Choose the correct letter A, B or C.",
+    qs: [
+      {id:"r1", sign:"CINEMA LOYALTY CARD\nCollect a stamp for every ticket you buy.\nGet your 10th ticket FREE!\nCard must be presented at time of purchase.", q:"What does this card offer?", opts:{A:"A free ticket after buying nine tickets.",B:"A ten percent discount on every ticket.",C:"A free ticket after collecting ten stamps."}},
+      {id:"r2", sign:"ATTENTION SHOPPERS\nDue to a water leak, the toilets on the ground floor are temporarily closed.\nPlease use the facilities on the second floor.\nWe apologise for any inconvenience.", q:"What does this notice say?", opts:{A:"The toilets on the second floor are broken.",B:"Shoppers should use toilets on a different floor.",C:"The ground floor of the shop is closed today."}},
+      {id:"r3", sign:"To: All staff\nThe car park behind the building will be closed for maintenance next Monday. Alternative parking is available on Park Street, a five-minute walk away.", q:"What should staff do next Monday?", opts:{A:"Use a different car park further from the office.",B:"Ask their manager for a parking permit.",C:"Leave their cars at home and use public transport."}},
+      {id:"r4", sign:"Message from Mum:\nI will be home late tonight - around 9pm. There is pasta in the fridge. Please feed the cat and make sure your little brother does his homework before watching TV.\nLove, Mum", q:"What does Mum want done before the TV goes on?", opts:{A:"The pasta should be cooked for dinner.",B:"The little brother should finish his schoolwork.",C:"The cat needs to be taken for a walk."}},
+      {id:"r5", sign:"CYCLE HIRE\nHire a bike for just 3 pounds per hour!\nHelmets included free of charge.\nUnder 16s must be accompanied by an adult.\nCycles must be returned by 18:00.", q:"What does this sign tell customers?", opts:{A:"Children can hire bikes alone if they wear a helmet.",B:"The price includes a helmet and bikes must be back by 6pm.",C:"Adult cyclists must pay an extra fee for a helmet."}}
+    ]
+  },
+  p2: {
+    inst: "The people below all want to improve their English. Decide which course would be most suitable for each person. Choose the correct letter A-H.",
+    people: [
+      {id:"r6",  name:"Yuki",   desc:"Yuki is a professional who needs to improve her written English for work emails and reports. She can only study in the evenings."},
+      {id:"r7",  name:"Pedro",  desc:"Pedro is a teenager who wants to prepare for a Cambridge English exam. He learns best in a classroom with other students."},
+      {id:"r8",  name:"Anna",   desc:"Anna is a tourist visiting for one month. She wants to improve her spoken English quickly and meet other international people."},
+      {id:"r9",  name:"Kwame",  desc:"Kwame works from home and wants a flexible course he can study at his own pace. He is interested in academic English."},
+      {id:"r10", name:"Fatima", desc:"Fatima is a mother who wants to help her young children with their English. She looks for family-friendly activities on weekends."}
+    ],
+    acts: [
+      {l:"A", title:"Business English Evening Course",desc:"Improve your professional writing skills including emails, reports and presentations. Monday and Wednesday evenings. Small groups."},
+      {l:"B", title:"Cambridge Exam Preparation",    desc:"Intensive classroom-based course for students aged 13-18. Prepare for B1, B2 and C1 Cambridge exams. Monday to Friday mornings."},
+      {l:"C", title:"Conversation and Culture",      desc:"Speak English every day in a friendly, international group. One month programme. Daily classes and social activities."},
+      {l:"D", title:"Online Academic English",       desc:"Study academic reading, writing and research skills at your own pace. Available 24/7. Ideal for professionals and university students."},
+      {l:"E", title:"English for Families",          desc:"Weekend workshops for parents and children aged 4-10. Learn English together through games, songs and stories. Saturday mornings."},
+      {l:"F", title:"General English for Adults",   desc:"Improve all areas of English in a relaxed classroom setting. Morning and afternoon options. Suitable for A2 to B2 level students."},
+      {l:"G", title:"IELTS Preparation Course",     desc:"Intensive preparation for the IELTS exam. Evening classes three times per week. Suitable for adults planning to study or work abroad."},
+      {l:"H", title:"English Through Film",         desc:"Watch and discuss films in English. Thursday evenings. Improve listening and vocabulary in an enjoyable way. All levels welcome."}
+    ]
+  },
+  p3: {
+    inst: "Read the article. For each question, choose the correct answer A, B, C or D.",
+    title: "Ben Torres - From Rubbish to Art",
+    text: "Ben Torres never planned to become an artist. Growing up in a small coastal town in Portugal, he spent most of his free time on the beach, surfing and swimming. But at the age of fourteen, something changed. Ben noticed that the beaches he loved were covered with plastic waste.\n\nInstead of feeling helpless, Ben decided to do something about it. He began collecting the plastic rubbish and, inspired by an art project he had seen online, started making sculptures from the materials he found.\n\nBy the time he was seventeen, Ben's sculptures were being displayed in local galleries. A journalist wrote about his work, and soon people from all over Portugal were visiting the town to see his art.\n\nAt nineteen, Ben was offered a place at a prestigious art college in Lisbon. He was uncertain at first - he had never studied art formally. But his teachers at college were amazed by his original style.\n\nToday, at twenty-three, Ben's work has been shown in galleries across Europe. He sells his sculptures for thousands of euros, and all profits go to ocean conservation projects.",
+    qs: [
+      {id:"r11", q:"What made Ben start making art?", opts:{A:"He was encouraged by a teacher at school.",B:"He wanted to raise money for charity.",C:"He was inspired by seeing plastic pollution on the beach.",D:"He had always dreamed of being an artist."}},
+      {id:"r12", q:"How did people first react to Ben's sculptures?", opts:{A:"They thought the materials he used were too unusual.",B:"They were impressed by both his skill and his message.",C:"They were confused by what the sculptures represented.",D:"They believed the work was not suitable for galleries."}},
+      {id:"r13", q:"What happened after a journalist wrote about Ben's work?", opts:{A:"Ben was offered a scholarship to study abroad.",B:"He began selling sculptures for large amounts of money.",C:"People from across Portugal came to see his art.",D:"He was invited to exhibit his work in Lisbon."}},
+      {id:"r14", q:"How did Ben feel about going to art college?", opts:{A:"He was excited because he had always wanted to study art.",B:"He was not sure at first because he had no formal training.",C:"He was disappointed because the college was far from home.",D:"He was confident because his sculptures were already famous."}},
+      {id:"r15", q:"What does Ben do with the money he earns from his art?", opts:{A:"He uses it to buy better materials for his sculptures.",B:"He saves it to open his own gallery.",C:"He donates it to projects that protect the ocean.",D:"He gives it to the town where he grew up."}}
+    ]
+  },
+  p4: {
+    inst: "Read the article. Choose from the sentences A-H the one which fits each gap. There are three extra sentences.",
+    title: "The Rise of Urban Farming",
+    sents: {A:"People are growing vegetables on rooftops, balconies, in community gardens and even indoors under artificial light.",B:"However, new technology such as vertical farming systems is helping to solve this problem.",C:"In some cities, urban farms supply fresh vegetables to local restaurants and food markets.",D:"This can reduce energy bills and make cities more comfortable during hot summers.",E:"Researchers have found that people who garden regularly report lower levels of stress and anxiety.",F:"Some urban farmers sell their produce at local markets, turning their hobby into a small business.",G:"Growing food in cities can also help people reconnect with nature.",H:"Many city governments are now offering grants to encourage residents to start urban farms."},
+    parts: [
+      "In cities around the world, a quiet revolution is taking place. Instead of relying entirely on food transported from the countryside, increasing numbers of city residents are growing their own food in unexpected places.",
+      "GAP",
+      "Rooftop gardens have become particularly popular in densely populated cities like New York, Tokyo and Paris. These gardens use space that would otherwise be empty and wasted.",
+      "GAP",
+      "Urban farming is not just about growing food - it also has important environmental benefits. Plants absorb carbon dioxide and help to cool buildings naturally.",
+      "GAP",
+      "Community gardens, where neighbours share a piece of land to grow vegetables together, are another growing trend. These spaces bring people together and strengthen local communities.",
+      "GAP",
+      "Despite its many advantages, urban farming also faces challenges. Space is limited in cities, and not everyone has access to a garden or rooftop.",
+      "GAP"
+    ]
+  },
+  p5: {
+    inst: "Read the article and choose the correct word for each space. Choose A, B, C or D.",
+    title: "Volunteering Abroad",
+    text: "Volunteering abroad is becoming an increasingly popular (21)___ for young people who want to make a difference in the world. Many organisations (22)___ volunteers to work on projects in developing countries, from building schools to protecting wildlife. The experience can be (23)___ rewarding, both personally and professionally. Volunteers often (24)___ skills that are difficult to learn in a classroom, such as problem-solving and cross-cultural communication. However, it is important to choose a reputable organisation (25)___ the volunteer programme genuinely benefits the local community. With the right preparation, volunteering abroad can be one of the most (26)___ experiences of a young person's life.",
+    qs: [
+      {id:"r21", q:"(21)", opts:{A:"choice",B:"option",C:"hobby",D:"decision"}},
+      {id:"r22", q:"(22)", opts:{A:"allow",B:"send",C:"recruit",D:"take"}},
+      {id:"r23", q:"(23)", opts:{A:"deeply",B:"greatly",C:"strongly",D:"heavily"}},
+      {id:"r24", q:"(24)", opts:{A:"practise",B:"gain",C:"earn",D:"collect"}},
+      {id:"r25", q:"(25)", opts:{A:"so that",B:"because",C:"although",D:"where"}},
+      {id:"r26", q:"(26)", opts:{A:"memorable",B:"useful",C:"exciting",D:"comfortable"}}
+    ]
+  },
+  p6: {
+    inst: "Read the article and write ONE word for each space.",
+    title: "The Olympic Games",
+    text: "The Olympic Games are (27)___ largest international sporting event in the world. They take place every four years and (28)___ athletes from more than two hundred countries. The modern Olympics began in Athens in 1896, although the ancient Games (29)___ held in Greece over two thousand years ago. Today, the Olympics include (30)___ than thirty different sports. The host city changes with (31)___ new edition of the Games, and being chosen as a host is considered a great honour. The Olympic motto reflects (32)___ spirit of competition and human achievement.",
+    r27:"the", r28:"attract", r29:"were", r30:"more", r31:"each", r32:"the"
+  },
+  writing: {
+    p1inst: "You have received an email from your English friend Alex about a project he is doing.",
+    p1email: "From: Alex\nSubject: Help with my project!\n\nI am doing a school project about different countries. Can you tell me about a tradition or celebration that is important in your country? What do people do and why is it special? Is it something that young people enjoy too?\n\nThanks!\nAlex",
+    p1notes: ["Describe a tradition or celebration","Explain what people do","Say why young people like or dislike it"],
+    p1task:  "Write an email to Alex. Answer his questions and use all the notes above. Write about 100 words.",
+    p2a_title: "Write an article for your school magazine",
+    p2a_prompt:"Your school magazine is running a series about the environment. Write about one thing young people can do to help protect the environment. Explain what it is, why it is effective, and encourage other students to do it. Write about 100 words.",
+    p2b_first: "The moment the lights went out, everyone in the room fell completely silent."
+  }
+}
+};
+
+
+// ═══════════════════════════════════════════════════
+// BUILD EXAM
+// ═══════════════════════════════════════════════════
+function buildExam(ver) {
+  var v = BANK[ver];
+  activeKey = v.key;
+  activeP6  = v.p6;
+  buildReading(v);
+  buildListening();
+  buildWriting(v);
+}
+
+function el(tag, attrs, text) {
+  var e = document.createElement(tag);
+  if (attrs) Object.keys(attrs).forEach(function(k){ e.setAttribute(k, attrs[k]); });
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function qBlock(id, num, qtext) {
+  var d = el("div", {id:"qb-"+id, class:"qblock"});
+  d.appendChild(el("div", {class:"qnum"}, "Question " + num));
+  if (qtext) d.appendChild(el("div", {class:"qtext"}, qtext));
+  return d;
+}
+
+function optRow(qid, letter, label) {
+  var row = el("div", {class:"opt"});
+  row.appendChild(el("div", {class:"opt-letter"}, letter));
+  if (label) row.appendChild(el("span", {}, label));
+  row.onclick = (function(id, l, r){ return function(){ pick(id, l, r); }; })(qid, letter, row);
+  return row;
+}
+
+function buildReading(v) {
+  var wrap = document.getElementById("reading-content");
+  wrap.innerHTML = "";
+
+  // P1
+  var c1 = el("div", {class:"part-card"});
+  c1.appendChild(el("div", {class:"part-title"}, "Part 1 – Signs & Short Messages"));
+  c1.appendChild(el("div", {class:"part-sub"}, "Q1–5 · 5 marks"));
+  c1.appendChild(el("div", {class:"instructions"}, v.p1.inst));
+  v.p1.qs.forEach(function(q, i) {
+    var b = qBlock(q.id, i+1, q.q);
+    var sign = el("div", {class:"signbox"}, q.sign);
+    b.insertBefore(sign, b.querySelector(".qtext"));
+    var opts = el("div", {class:"opts"});
+    ["A","B","C"].forEach(function(x){ opts.appendChild(optRow(q.id, x, q.opts[x])); });
+    b.appendChild(opts);
+    c1.appendChild(b);
+  });
+  wrap.appendChild(c1);
+
+  // P2
+  var c2 = el("div", {class:"part-card"});
+  c2.appendChild(el("div", {class:"part-title"}, "Part 2 – Matching"));
+  c2.appendChild(el("div", {class:"part-sub"}, "Q6–10 · 5 marks"));
+  c2.appendChild(el("div", {class:"instructions"}, v.p2.inst));
+  var actBox = el("div", {class:"ref-box"});
+  actBox.appendChild(el("div", {class:"ref-box-title"}, "Activities / Options"));
+  v.p2.acts.forEach(function(a) {
+    var d = el("div", {class:"ref-item"});
+    d.innerHTML = "<strong>" + a.l + ".</strong> <strong>" + a.title + "</strong> — " + a.desc;
+    actBox.appendChild(d);
+  });
+  c2.appendChild(actBox);
+  v.p2.people.forEach(function(p, i) {
+    var b = qBlock(p.id, i+6, p.name + " — " + p.desc);
+    var opts = el("div", {class:"opts", style:"grid-template-columns:repeat(4,1fr);"});
+    ["A","B","C","D","E","F","G","H"].forEach(function(x){ opts.appendChild(optRow(p.id, x, "")); });
+    b.appendChild(opts);
+    c2.appendChild(b);
+  });
+  wrap.appendChild(c2);
+
+  // P3
+  var c3 = el("div", {class:"part-card"});
+  c3.appendChild(el("div", {class:"part-title"}, "Part 3 – Long Text"));
+  c3.appendChild(el("div", {class:"part-sub"}, "Q11–15 · 5 marks"));
+  c3.appendChild(el("div", {class:"instructions"}, v.p3.inst));
+  var artBox = el("div", {class:"ref-box"});
+  artBox.appendChild(el("div", {class:"ref-box-title"}, v.p3.title));
+  artBox.appendChild(el("div", {style:"font-size:0.88rem;line-height:1.8;white-space:pre-line;"}, v.p3.text));
+  c3.appendChild(artBox);
+  v.p3.qs.forEach(function(q, i) {
+    var b = qBlock(q.id, i+11, q.q);
+    var opts = el("div", {class:"opts"});
+    ["A","B","C","D"].forEach(function(x){ opts.appendChild(optRow(q.id, x, q.opts[x])); });
+    b.appendChild(opts);
+    c3.appendChild(b);
+  });
+  wrap.appendChild(c3);
+
+  // P4
+  var c4 = el("div", {class:"part-card"});
+  c4.appendChild(el("div", {class:"part-title"}, "Part 4 – Gapped Text"));
+  c4.appendChild(el("div", {class:"part-sub"}, "Q16–20 · 5 marks"));
+  c4.appendChild(el("div", {class:"instructions"}, v.p4.inst));
+  var sentBox = el("div", {class:"ref-box"});
+  sentBox.appendChild(el("div", {class:"ref-box-title"}, "Sentences A–H"));
+  Object.keys(v.p4.sents).forEach(function(k) {
+    var d = el("div", {class:"ref-item"});
+    d.innerHTML = "<strong>" + k + ".</strong> " + v.p4.sents[k];
+    sentBox.appendChild(d);
+  });
+  c4.appendChild(sentBox);
+  var textBox4 = el("div", {style:"background:#fff;border:1px solid #d4c9a8;border-radius:8px;padding:18px;margin-bottom:16px;"});
+  textBox4.appendChild(el("div", {style:"font-weight:700;color:#0a1628;margin-bottom:12px;"}, v.p4.title));
+  var gapIds = ["r16","r17","r18","r19","r20"];
+  var gn = 0;
+  v.p4.parts.forEach(function(part) {
+    if (part === "GAP") {
+      var gid = gapIds[gn++];
+      var b = el("div", {id:"qb-"+gid, class:"qblock", style:"margin:10px 0;"});
+      b.appendChild(el("div", {class:"qnum"}, "Gap " + gn + " — choose A–H"));
+      var opts = el("div", {class:"opts", style:"grid-template-columns:repeat(4,1fr);"});
+      ["A","B","C","D","E","F","G","H"].forEach(function(x){ opts.appendChild(optRow(gid, x, "")); });
+      b.appendChild(opts);
+      textBox4.appendChild(b);
+    } else {
+      textBox4.appendChild(el("p", {style:"font-size:0.88rem;line-height:1.8;margin:8px 0;"}, part));
+    }
+  });
+  c4.appendChild(textBox4);
+  wrap.appendChild(c4);
+
+  // P5
+  var c5 = el("div", {class:"part-card"});
+  c5.appendChild(el("div", {class:"part-title"}, "Part 5 – Multiple Choice Cloze"));
+  c5.appendChild(el("div", {class:"part-sub"}, "Q21–26 · 6 marks"));
+  c5.appendChild(el("div", {class:"instructions"}, v.p5.inst));
+  var tb5 = el("div", {class:"ref-box"});
+  tb5.appendChild(el("div", {class:"ref-box-title"}, v.p5.title));
+  tb5.appendChild(el("div", {style:"font-size:0.88rem;line-height:1.85;"}, v.p5.text));
+  c5.appendChild(tb5);
+  v.p5.qs.forEach(function(q, i) {
+    var b = qBlock(q.id, i+21, q.q);
+    var opts = el("div", {class:"opts"});
+    ["A","B","C","D"].forEach(function(x){ opts.appendChild(optRow(q.id, x, q.opts[x])); });
+    b.appendChild(opts);
+    c5.appendChild(b);
+  });
+  wrap.appendChild(c5);
+
+  // P6
+  var c6 = el("div", {class:"part-card"});
+  c6.appendChild(el("div", {class:"part-title"}, "Part 6 – Open Cloze"));
+  c6.appendChild(el("div", {class:"part-sub"}, "Q27–32 · 6 marks"));
+  c6.appendChild(el("div", {class:"instructions"}, v.p6.inst));
+  var tb6 = el("div", {style:"background:#fff;border:1px solid #d4c9a8;border-radius:8px;padding:18px;margin-bottom:16px;"});
+  tb6.appendChild(el("div", {style:"font-weight:700;color:#0a1628;margin-bottom:10px;"}, v.p6.title));
+  tb6.appendChild(el("div", {style:"font-size:0.88rem;line-height:2;"}, v.p6.text));
+  c6.appendChild(tb6);
+  var p6keys = Object.keys(v.p6);
+  var p6num = 27;
+  ["r27","r28","r29","r30","r31","r32"].forEach(function(kid) {
+    var b = qBlock(kid, p6num, "Write ONE word for gap (" + p6num + "):");
+    var inp = el("input", {type:"text", id:kid, placeholder:"one word...", class:"text-inp"});
+    inp.oninput = (function(id){ return function(){ typeAnswer(id, this.value); }; })(kid);
+    b.appendChild(inp);
+    c6.appendChild(b);
+    p6num++;
+  });
+  wrap.appendChild(c6);
+}
+
+function buildListening() {
+  var wrap = document.getElementById("listening-content");
+  wrap.innerHTML = "";
+  var lqs = [
+    {id:"l1", q:"L1 — What did the girl buy on her shopping trip?", opts:{A:"Bookcase / Shelves", B:"Lamp / Light", C:"Cushion / Pillow"}},
+    {id:"l2", q:"L2 — Why did the plane leave late?", opts:{A:"Wind", B:"Snow", C:"Rain"}},
+    {id:"l3", q:"L3 — What activity does the woman want to book?", opts:{A:"Rock climbing", B:"Kayaking", C:"Horse riding"}},
+    {id:"l4", q:"L4 — Where will the school trip take place?", opts:{A:"The coast", B:"The mountains", C:"The city centre"}},
+    {id:"l5", q:"L5 — What does the boy decide to wear to the party?", opts:{A:"Jeans and a T-shirt", B:"A suit", C:"Sports clothes"}},
+    {id:"l6", q:"L6 — What time does the film start?", opts:{A:"7:15", B:"7:30", C:"7:45"}},
+    {id:"l7", q:"L7 — What did the family do on holiday?", opts:{A:"Visited museums", B:"Went to the beach", C:"Stayed at home"}},
+    {id:"l8", q:"L8 — The boy says the English test was ...", opts:{A:"easy", B:"difficult", C:"fair"}},
+    {id:"l9", q:"L9 — What does the girl want to be when she grows up?", opts:{A:"A doctor", B:"A teacher", C:"An engineer"}},
+    {id:"l10",q:"L10 — How does the man travel to work every day?", opts:{A:"By bus", B:"By bike", C:"By car"}},
+    {id:"l11",q:"L11 — What is the weather like this afternoon?", opts:{A:"Sunny", B:"Cloudy", C:"Rainy"}},
+    {id:"l12",q:"L12 — Why is the library closed?", opts:{A:"It is being repaired.", B:"It is a public holiday.", C:"There are no staff available."}},
+    {id:"l13",q:"L13 — What subject does the boy find most difficult?", opts:{A:"Maths", B:"History", C:"Science"}}
+  ];
+  var shortAns = [
+    {id:"l14",q:"L14 — What is the name of the new sports centre? Write the FULL NAME:"},
+    {id:"l15",q:"L15 — What time does the bus to the airport leave? Write the TIME:"},
+    {id:"l16",q:"L16 — How much does a student ticket cost? Write the PRICE:"},
+    {id:"l17",q:"L17 — What is the name of the street where the hotel is? Write the NAME:"},
+    {id:"l18",q:"L18 — How many students are in the exchange group? Write the NUMBER:"},
+    {id:"l19",q:"L19 — What is the password for the school Wi-Fi? Write the PASSWORD:"},
+    {id:"l20",q:"L20 — What date is the school concert? Write the DATE:"},
+    {id:"l21",q:"L21 — What is the name of the teacher organising the trip?"},
+    {id:"l22",q:"L22 — How long is the train journey? Write in minutes or hours:"},
+    {id:"l23",q:"L23 — What must students bring to the science lesson? Write the ITEM:"},
+    {id:"l24",q:"L24 — What floor is the headteacher's office on? Write the FLOOR:"},
+    {id:"l25",q:"L25 — What is the topic of the school radio programme? Write the TOPIC:"}
+  ];
+
+  lqs.forEach(function(q) {
+    var b = qBlock(q.id, q.id.replace("l","L"), q.q);
+    var opts = el("div", {class:"opts"});
+    ["A","B","C"].forEach(function(x){ opts.appendChild(optRow(q.id, x, q.opts[x])); });
+    b.appendChild(opts);
+    wrap.appendChild(b);
+  });
+  shortAns.forEach(function(q) {
+    var b = qBlock(q.id, q.id.replace("l","L"), q.q);
+    var inp = el("input", {type:"text", id:q.id, placeholder:"Write your answer...", class:"text-inp"});
+    inp.oninput = (function(id){ return function(){ answers[id] = this.value; }; })(q.id);
+    b.appendChild(inp);
+    wrap.appendChild(b);
+  });
+}
+
+function buildWriting(v) {
+  var wrap = document.getElementById("writing-content");
+  wrap.innerHTML = "";
+  var w = v.writing;
+
+  var c1 = el("div", {class:"part-card"});
+  c1.appendChild(el("div", {class:"part-title"}, "Writing Part 1 – Email (compulsory)"));
+  c1.appendChild(el("div", {class:"instructions"}, w.p1inst));
+  var emailBox = el("div", {class:"signbox"}, w.p1email);
+  c1.appendChild(emailBox);
+  var noteBox = el("div", {style:"background:#fff;border:1px solid #d4c9a8;border-radius:6px;padding:12px;margin-bottom:12px;font-size:0.85rem;"});
+  noteBox.innerHTML = "<strong>Notes:</strong><ul style='margin:8px 0 0 16px;'>" + w.p1notes.map(function(n){ return "<li>" + n + "</li>"; }).join("") + "</ul>";
+  c1.appendChild(noteBox);
+  c1.appendChild(el("div", {class:"qtext"}, w.p1task));
+  var ta1 = el("textarea", {id:"writing1", class:"writing-area", rows:"8", placeholder:"Write your email here..."});
+  ta1.oninput = function(){ updateWC(this, "wc1"); };
+  c1.appendChild(ta1);
+  c1.appendChild(el("div", {class:"wc"}, "Words: 0")).id = "wc1-wrap";
+  var wc1 = el("div", {class:"wc"});
+  wc1.innerHTML = "Words: <span id='wc1'>0</span>";
+  c1.appendChild(wc1);
+  wrap.appendChild(c1);
+
+  var c2 = el("div", {class:"part-card"});
+  c2.appendChild(el("div", {class:"part-title"}, "Writing Part 2 – Choose ONE"));
+
+  var opt1 = el("div", {style:"border:2px solid #d4c9a8;border-radius:8px;padding:16px;margin-bottom:14px;"});
+  opt1.appendChild(el("div", {style:"font-weight:700;font-size:0.9rem;color:#0a1628;margin-bottom:8px;"}, "Option A – " + w.p2a_title));
+  opt1.appendChild(el("div", {class:"qtext"}, w.p2a_prompt));
+  var ta2 = el("textarea", {id:"writing2", class:"writing-area", rows:"7", placeholder:"Write your article here..."});
+  ta2.oninput = function(){ updateWC(this, "wc2"); };
+  opt1.appendChild(ta2);
+  var wc2 = el("div", {class:"wc"}); wc2.innerHTML = "Words: <span id='wc2'>0</span>";
+  opt1.appendChild(wc2);
+  c2.appendChild(opt1);
+
+  var opt2 = el("div", {style:"border:2px solid #d4c9a8;border-radius:8px;padding:16px;"});
+  opt2.appendChild(el("div", {style:"font-weight:700;font-size:0.9rem;color:#0a1628;margin-bottom:8px;"}, "Option B – Story"));
+  opt2.appendChild(el("div", {class:"qtext"}, "Your story must begin with:"));
+  opt2.appendChild(el("div", {style:"background:#f0ead8;border-left:3px solid #c8a84b;padding:10px 14px;margin:10px 0;font-style:italic;border-radius:0 6px 6px 0;"}, w.p2b_first));
+  var ta3 = el("textarea", {id:"writing3", class:"writing-area", rows:"7", placeholder:"Continue the story here..."});
+  ta3.oninput = function(){ updateWC(this, "wc3"); };
+  opt2.appendChild(ta3);
+  var wc3 = el("div", {class:"wc"}); wc3.innerHTML = "Words: <span id='wc3'>0</span>";
+  opt2.appendChild(wc3);
+  c2.appendChild(opt2);
+
+  wrap.appendChild(c2);
+}
+
+function updateWC(ta, spanId) {
+  var w = ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0;
+  var sp = document.getElementById(spanId);
+  if (sp) sp.textContent = w;
+}
+
+</script>
+</body>
+</html>
